@@ -1,0 +1,174 @@
+#include<iostream>
+#include<windows.h>
+#include<math.h>
+#define MAX 20
+# define OK 1
+# define OVERFLOW -2
+# define ERROR 0
+const int MVNum = 100;//最大顶点数
+using namespace std;
+//边结点
+struct ArcNode
+{
+        int adjvex;//该边所指向的结点位置
+        ArcNode *nextarc;//指向下一条边的指针
+};
+//表头结点
+struct VNode
+{
+        char data;//表头数据
+        int jingdu;
+        int weidu;
+        int people;
+        ArcNode *firstarc;//指向第一条依附该顶点的边的指针
+};
+typedef VNode AdjList[MVNum]; //邻接表
+typedef struct
+{
+        AdjList vertices;
+        int vexnum;//当前顶点数
+}ALGraph;
+
+struct PNode
+{
+        char data;//表头数据
+        int jingdu;
+        int weidu;
+        int people;
+}PNode[100];
+int LocateVex(ALGraph G, char v)
+{
+        for (int i = 0; i < G.vexnum; i++)
+                if (G.vertices[i].data == v) return i;
+}
+
+int CreateUDG(ALGraph &G)
+{
+        cout<<"输入总城市数："<<endl;
+        cin>>G.vexnum;
+        cout<<"依次输入各城市的信息："<<endl;
+        for (int i = 0; i < G.vexnum; i++)
+        {
+                cout<<"输入城市编号："<<endl;
+                cin>>G.vertices[i].data;
+                G.vertices[i].firstarc = NULL;
+                cout<<"输入经度："<<endl;
+                cin>>G.vertices[i].jingdu;
+                cout<<"输入纬度："<<endl;
+                cin>>G.vertices[i].weidu;
+                cout<<"输入人数："<<endl;
+                cin>>G.vertices[i].people;
+                cout<<endl;
+        }
+        cout<<"各城市姐妹群："<<endl;
+        char v1, v2;
+        int i, j;
+        ArcNode *p1 = NULL, *p2 = NULL;
+        for (int k = 0; k < G.vexnum ; k++)
+        {
+            v1=G.vertices[k].data;
+            for(int m=k+1;m<G.vexnum;m++)
+            {
+                v2=G.vertices[m].data;
+                i = LocateVex(G, v1);
+                j = LocateVex(G, v2);
+                p1 = new ArcNode;
+                p1->adjvex = j;
+                p1->nextarc = G.vertices[i].firstarc;
+                G.vertices[i].firstarc = p1;
+                p2 = new ArcNode;
+                p2->adjvex = i;
+                p2->nextarc = G.vertices[j].firstarc;
+                G.vertices[j].firstarc = p2;
+            }
+        }
+        return 0;
+}
+int k;
+bool visited[MAX];
+bool visited1[MAX];
+int FirstAdjVex(ALGraph G, int v)
+{
+        if(v<0 || v>MAX)  return -1;
+        ArcNode*p=G.vertices[v].firstarc;
+        if(p!=NULL) return p->adjvex;
+        else return -1;
+}
+int NextAdjVex(ALGraph G, int v,int w)
+{
+        if(v<0 || v>MAX)  return -1;
+        if(w<0 || w>MAX)  return -1;
+        ArcNode*p=G.vertices[v].firstarc;
+        while(p!=NULL && p->adjvex!=w) p=p->nextarc;
+        if(p->nextarc!=NULL)  return p->nextarc->adjvex;
+         else return -1;
+}
+void DFS(ALGraph G, int v)
+{
+        int t1,t2,t3;
+        t1=PNode[k].jingdu-G.vertices[v].jingdu;
+        t2=PNode[k].weidu-G.vertices[v].weidu;
+        t3=PNode[k].people-G.vertices[v].people;
+
+        visited[v] = true;
+        if(PNode[k].data!=G.vertices[v].data)
+        {
+                if(abs(t1)<=5||abs(t2)<=5)
+                {
+                        if(abs(t3)<=50000)
+                        {
+                                cout<<"城市";
+                                cout<<G.vertices[v].data<<" ";
+                        }
+                }
+        }
+        for(int w=FirstAdjVex(G, v);w!=-1;w=NextAdjVex(G,v,w))
+          if(!visited[w])  DFS(G, w);
+}
+void DFSTraverse(ALGraph G)
+{
+        int v;
+        for (v=0; v<G.vexnum; ++v)
+                visited[v] = false;
+        for (v=0; v<G.vexnum; ++v)
+        if(!visited[v])
+                {
+
+                        DFS(G, v);
+
+                }
+}
+void DFS1(ALGraph G, int v)
+{
+        visited1[v] = true;
+        PNode[v].data=G.vertices[v].data;
+        PNode[v].jingdu=G.vertices[v].jingdu;
+        PNode[v].weidu=G.vertices[v].weidu;
+        PNode[v].people=G.vertices[v].people;
+        for(int w=FirstAdjVex(G, v);w!=-1;w=NextAdjVex(G,v,w))
+          if(!visited1[w])  DFS1(G, w);
+}
+void DFSTraverse1(ALGraph G)
+{
+        int v;
+        for (v=0; v<G.vexnum; ++v)
+                visited1[v] = false;
+        for (v=0; v<G.vexnum; ++v)
+                if (!visited1[v])  DFS1(G, v);
+}
+
+int main()
+{
+	ALGraph G;
+	CreateUDG(G);
+	DFSTraverse1(G);
+	for (k=0; k<G.vexnum; ++k)
+        {
+                cout<<"城市"<<PNode[k].data<<"的姐妹城市： ";
+	        DFSTraverse(G);
+	        cout<<endl;
+        }
+
+	system("pause");
+	return 0;
+}
